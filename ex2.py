@@ -2,7 +2,7 @@ import sys
 sys.setrecursionlimit(20000)
 
 import timeit
-from matplotlib import pyplot as pyplot
+from matplotlib import pyplot as plt
 import numpy as np
 from numpy import random
 
@@ -78,14 +78,47 @@ def reversedValue(size):
 
     return arr
 
+def get_avg(func, data):
+    '''
+    Get average time for 100 runs
+    '''
+    total_time = 0
+    for i in range(100):
+        total_time += timeit.timeit(lambda: func(data))
+    return total_time / 100
+
 inputSizes = [2, 5, 10, 25, 50, 75, 100, 250, 500, 750, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000, 5500]
 
-quicksortTimes = []
-bubblesortTimes = []
+for size in inputSizes:
+    quicksort_best = [sortedValue(size)[: size // 2] + sortedValue(size)[::-1][size //2:]]
+    quicksort_avg = [randomValue(size)]
+    # quicksort_worst = [[max(arr) for i in range(size)]]
+    bubblesort_best = [sortedValue(size)]
+    bubblesort_avg = [randomValue(size)]
+    bubblesort_worst = [reversedValue(size)]
 
-for sizes in inputSizes:
-    # best case scenario testing
-    bubblearr = sortedValue(sizes)
-    bubbleBest = timeit.timeit(bubble_sort(bubblearr))
+    # get execution time
+    bubblesort_best_time = [get_avg(bubble_sort, arr) for arr in bubblesort_best]
+    bubblesort_avg_time = [get_avg(bubble_sort, arr) for arr in bubblesort_avg]
+    bubblesort_worst_time = [get_avg(bubble_sort, arr) for arr in bubblesort_worst]
 
-    bubblesortTimes.append(bubbleBest)
+    quicksort_best_time = [get_avg(quicksort, arr) for arr in quicksort_best]
+    quicksort_avg_time = [get_avg(quicksort, arr) for arr in quicksort_avg]
+    # quicksort_worst_time = [get_avg(quicksort, arr) for arr in quicksort_worst]
+
+    plt.figure(figsize=(10, 6))
+
+    plt.plot(inputSizes, bubblesort_best_time, label="Bubble Sort (best)", marker="o")
+    plt.plot(inputSizes, bubblesort_avg_time, label="Bubble Sort (avg)", marker="s")
+    plt.plot(inputSizes, bubblesort_worst_time, label="Bubble Sort (worst)", marker="^")
+    
+    plt.plot(inputSizes, quicksort_best_time, label="Quick Sort (best)", marker="o")
+    plt.plot(inputSizes, quicksort_avg_time, label="Quick Sort (avg)", marker="s")
+    # plt.plot(inputSizes, quicksort_worst_time, label="Quick Sort (worst)", marker="^")
+
+    plt.xlabel("Input size")
+    plt.ylabel("Execution time")
+    plt.legend()
+    plt.grid(True)
+
+    plt.show()
