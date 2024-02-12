@@ -1,10 +1,8 @@
-import sys 
-sys.setrecursionlimit(20000)
 
 import timeit
 from matplotlib import pyplot as plt
 import numpy as np
-from numpy import random
+import random
 
 def bubble_sort(arr):
     '''
@@ -55,6 +53,17 @@ def quicksort(arr):
    right = [x for x in arr if x > pivot]
    return quicksort(left) + middle + quicksort(right)
 
+def quicksort_worst_func(arr):
+   '''
+   quicksort in worst case
+   '''
+   if len(arr) <= 1:
+      return arr
+   pivot = arr[0]
+   left = [x for x in arr[1:] if x <= pivot]
+   right = [x for x in arr[1:] if x > pivot]
+   return quicksort(left) + [pivot] + quicksort(right)
+
 def randomValue(size):
     '''
     Generate an array of certain size with random values
@@ -87,42 +96,64 @@ def get_avg(func, data):
     '''
     total_time = 0
     
-    total_time += timeit.timeit(lambda: func(data), number=100)
-    
-    return total_time / 100
+    total_time = timeit.timeit(lambda: func(data), number=100)
 
-inputSizes = [2, 5, 10, 25, 50, 75, 100, 250, 500, 750, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000, 5500]
+    time_avg = total_time / 100
+    return time_avg
+
+inputSizes = [2, 5, 7, 10, 15, 20, 25, 30, 40, 50, 75, 100, 110, 120, 135, 150, 175, 200, 225, 250]
+
+qs_best_times = []
+qs_worst_times = []
+qs_avg_times = []
+
+bs_best_times = []
+bs_worst_times = []
+bs_avg_times = []
 
 for size in inputSizes:
-    quicksort_best = [sortedValue(size)[: size // 2] + sortedValue(size)[::-1][size //2:]]
-    quicksort_avg = [randomValue(size)]
-    # quicksort_worst = [[max(arr) for i in range(size)]]
-    bubblesort_best = [sortedValue(size)]
-    bubblesort_avg = [randomValue(size)]
-    bubblesort_worst = [reversedValue(size)]
+    quicksort_best = randomValue(size)
+    quicksort_avg = randomValue(size)
+    quicksort_worst = randomValue(size)
+    bubblesort_best = sortedValue(size)
+    bubblesort_avg = randomValue(size)
+    bubblesort_worst = reversedValue(size)
 
     # get execution time
-    bubblesort_best_time = [get_avg(bubble_sort, arr) for arr in bubblesort_best]
-    bubblesort_avg_time = [get_avg(bubble_sort, arr) for arr in bubblesort_avg]
-    bubblesort_worst_time = [get_avg(bubble_sort, arr) for arr in bubblesort_worst]
+    bubblesort_best_time = get_avg(bubble_sort, bubblesort_best)
+    bubblesort_avg_time = get_avg(bubble_sort, bubblesort_avg)
+    bubblesort_worst_time = get_avg(bubble_sort, bubblesort_worst)
 
-    quicksort_best_time = [get_avg(quicksort, arr) for arr in quicksort_best]
-    quicksort_avg_time = [get_avg(quicksort, arr) for arr in quicksort_avg]
-    # quicksort_worst_time = [get_avg(quicksort, arr) for arr in quicksort_worst]
+    quicksort_best_time = get_avg(quicksort, quicksort_best)
+    quicksort_avg_time = get_avg(quicksort, quicksort_avg)
+    quicksort_worst_time = get_avg(quicksort_worst_func, quicksort_worst)
 
-    plt.figure(figsize=(10, 6))
+    qs_avg_times.append(quicksort_avg_time)
+    qs_best_times.append(quicksort_best_time)
+    qs_worst_times.append(quicksort_worst_time)
+    bs_avg_times.append(bubblesort_avg_time)
+    bs_best_times.append(bubblesort_best_time)
+    bs_worst_times.append(bubblesort_worst_time)
 
-    plt.plot(inputSizes, bubblesort_best_time, label="Bubble Sort (best)", marker="o")
-    plt.plot(inputSizes, bubblesort_avg_time, label="Bubble Sort (avg)", marker="s")
-    plt.plot(inputSizes, bubblesort_worst_time, label="Bubble Sort (worst)", marker="^")
-    
-    plt.plot(inputSizes, quicksort_best_time, label="Quick Sort (best)", marker="o")
-    plt.plot(inputSizes, quicksort_avg_time, label="Quick Sort (avg)", marker="s")
-    # plt.plot(inputSizes, quicksort_worst_time, label="Quick Sort (worst)", marker="^")
+# plotting and analyzing performnace
+figure, axis = plt.subplots(nrows=1, ncols=3, figsize=[15, 5])
 
-    plt.xlabel("Input size")
-    plt.ylabel("Execution time")
-    plt.legend()
-    plt.grid(True)
+# best case
+axis[0].plot(inputSizes, qs_best_times, label="quicksort")
+axis[0].plot(inputSizes, bs_best_times, label="bubble sort")
+axis[0].set_title("Best case")
+axis[0].legend()
 
-    plt.show()
+# average case
+axis[1].plot(inputSizes, qs_avg_times, label="quicksort")
+axis[1].plot(inputSizes, bs_avg_times, label="bubble sort")
+axis[1].set_title("Average case")
+axis[1].legend()
+
+# worst case
+axis[2].plot(inputSizes, qs_worst_times, label="quicksort")
+axis[2].plot(inputSizes, bs_worst_times, label="bubble sort")
+axis[2].set_title("Worst case")
+axis[2].legend()
+
+plt.show()
