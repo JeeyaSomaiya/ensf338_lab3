@@ -40,17 +40,20 @@ def partition(arr, low, high):
     arr[low], arr[right] = arr[right], arr[low]
     return right
 
-def quicksort(arr, low, high):
-    '''
+def quicksort(arr):
+   '''
     Quick Sort analysis
     worst: largest/smallest element chosen for pivot O(n^2)
     best: pivots always create equal sized subarrays O(nlog(n))
     avg: O(nlog(n))
     '''
-    if low < high: 
-        pivot_index = partition(arr, low, high)
-        quicksort(arr, low, pivot_index)
-        quicksort(arr, pivot_index + 1, high)
+   if len(arr) <= 1:
+      return arr
+   pivot = arr[len(arr) // 2]
+   left = [x for x in arr if x < pivot]
+   middle = [x for x in arr if x == pivot]
+   right = [x for x in arr if x > pivot]
+   return quicksort(left) + middle + quicksort(right)
 
 def randomValue(size):
     '''
@@ -83,8 +86,9 @@ def get_avg(func, data):
     Get average time for 100 runs
     '''
     total_time = 0
-    for i in range(100):
-        total_time += timeit.timeit(lambda: func(data))
+    
+    total_time += timeit.timeit(lambda: func(data), number=100)
+    
     return total_time / 100
 
 inputSizes = [2, 5, 10, 25, 50, 75, 100, 250, 500, 750, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000, 5500]
