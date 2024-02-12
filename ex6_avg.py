@@ -86,4 +86,4 @@ plt.grid(True)
 plt.show()
 
 # Q4. Plot the above and discuss with algorithm is faster
-# Like stated, binary search is faster than linear search but because binary search relies on a sorted array, its performance depends on algorithm used to sort the array and its time complexity affecting the performance of the binary search.
+# Like stated, binary search is faster than linear search but because binary search relies on a sorted array, its performance depends on algorithm used to sort the array and its time complexity affecting the performance of the binary search. So in this case, just the linear search is faster compared to the quicksort+binary search.
