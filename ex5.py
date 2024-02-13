@@ -1,101 +1,91 @@
-import random
-import timeit
-from matplotlib import pyplot as plt
-from scipy.optimize import curve_fit
+import matplotlib.pyplot as plt
 import numpy as np
+import timeit
+import random
 
-vectorSize = [1000, 2000, 4000, 8000, 16000, 32000]
+def insertion_sort(arr):
+    for i in range(1, len(arr)):
+        key = arr[i]
+        j = i - 1
+        while j >= 0 and key < arr[j]:
+            arr[j + 1] = arr[j]
+            j -= 1
+        arr[j + 1] = key
+    return arr
 
-def log_equation(x, a):
-   return a * np.log2(x)
+def binary_search(arr, key, low, high):
+    while low <= high:
+        mid = (low + high) // 2
+        if arr[mid] < key:
+            low = mid + 1
+        else:
+            high = mid - 1
+    return low
 
-def linearSearch(arr, n):
-   """
-   Linear Search Implementation
-   """
-   for i in range(len(arr)):
-      if arr[i] == n:
-         return True
-   return False
+def binary_insertion_sort(arr):
+    for i in range(1, len(arr)):
+        key = arr[i]
+        j = binary_search(arr, key, 0, i - 1)
+        arr = arr[:j] + [key] + arr[j:i] + arr[i + 1:]
+    return arr
 
-def binarySearch(arr, first, last, key):
-   """
-   Binary Search Implementation
-   """
-   if(first <= last):
-      mid = (first+last)//2
-      if (key == arr[mid]):
-         return True
-      elif (key < arr[mid]):
-         return binarySearch(arr, first, mid-1, key)
-         # last = mid - 1
-      elif (key > arr[mid]):
-         return binarySearch(arr, mid+1, last, key)
-         # first = mid + 1
-      
-   return False
+def generate_random_array(size):
+    return [random.randint(1, 1000) for _ in range(size)]
+
+def measure_time(algorithm, input_size):
+    arr = generate_random_array(input_size)
+    start_time = timeit.default_timer()
+    if algorithm == 'insertion':
+        insertion_sort(arr)
+    elif algorithm == 'binary':
+        binary_insertion_sort(arr)
+    end_time = timeit.default_timer()
+    return end_time - start_time
 
 
-def generate_sorted_vector(size):
-   """
-   Generate a vector of size with random values and sort
-   """
+sizes = [100, 500, 1000, 2000, 5000]  
+for size in sizes:
+    insertion_time = measure_time('insertion', size)
+    binary_time = measure_time('binary', size)
+    print(f"Input size: {size}\tInsertion Sort Time: {insertion_time:.6f} seconds\tBinary Insertion Sort Time: {binary_time:.6f} seconds")
 
-   # generate a random vector of size
-   numbers = [x for x in range(size)]
-   # sort the random vector
-   sort_vector = sorted(numbers)
-   
-   return sort_vector
+insertion_times = []
+binary_times = []
+for size in sizes:
+    insertion_time = measure_time('insertion', size)
+    binary_time = measure_time('binary', size)
+    insertion_times.append(insertion_time)
+    binary_times.append(binary_time)
 
-lineartimes = []
-binarytimes = []
+plt.figure(figsize=(10, 6))
 
-for vector in vectorSize:
-   # get sorted vector
-   sorted_vector = generate_sorted_vector(vector) 
+plt.scatter(sizes, insertion_times, color='blue', label='Insertion Sort')
+plt.scatter(sizes, binary_times, color='red', label='Binary Insertion Sort')
 
-   # get element at target index
-   target_element = random.choice(sorted_vector)
+# Interpolating functions
+x_vals = np.linspace(min(sizes), max(sizes), 100)
+insertion_fit = np.polyfit(sizes, insertion_times, 2)
+insertion_fit_fn = np.poly1d(insertion_fit)
+plt.plot(x_vals, insertion_fit_fn(x_vals), linestyle='--', color='blue', label='Insertion Sort Interpolating Function')
 
-   # measure linear search time using 100 itereations
-   search_linear = timeit.repeat(lambda: linearSearch(sorted_vector, target_element), number=100)
+binary_fit = np.polyfit(sizes, binary_times, 2)
+binary_fit_fn = np.poly1d(binary_fit)
+plt.plot(x_vals, binary_fit_fn(x_vals), linestyle='--', color='red', label='Binary Insertion Sort Interpolating Function')
 
-   # measure binary search time using 100 iterations
-   search_binary = timeit.repeat(lambda: binarySearch(sorted_vector, 0, len(sorted_vector)-1, target_element), number=100)
+insertion_eq = f'Insertion Sort: {insertion_fit_fn}'
+binary_eq = f'Binary Insertion Sort: {binary_fit_fn}'
+plt.text(0.5, 0.95, insertion_eq, transform=plt.gca().transAxes, fontsize=10, verticalalignment='top', color='blue')
+plt.text(0.5, 0.90, binary_eq, transform=plt.gca().transAxes, fontsize=10, verticalalignment='top', color='red')
 
-   # get avg times
-   linearavg = sum(search_linear) / 100
-   binaryavg = sum(search_binary) / 100
-
-   # store values into list
-   lineartimes.append(linearavg)
-   binarytimes.append(binaryavg)
-
-# print("Linear Search Times:", lineartimes)
-# print("Binary Search Times:", binarytimes)
-   
-# Linear fit
-slope, intercept = np.polyfit(vectorSize, lineartimes, 1)
-plt.scatter(vectorSize, lineartimes)
-linevalues = [slope * x + intercept for x in vectorSize]
-plt.plot(vectorSize, linevalues, 'r')
-# print("linear model is: t = %.2e * n + %.2e" % (slope, intercept))
-
-# Log fit
-log_fit, pcov = curve_fit(log_equation, vectorSize, binarytimes)
-plt.scatter(vectorSize, binarytimes)
-logvalues = [log_equation(x, *log_fit) for x in vectorSize]
-plt.plot(vectorSize, logvalues, 'g')
-
+plt.xlabel('Input Size')
+plt.ylabel('Time (seconds)')
+plt.title('Comparison of Insertion Sort and Binary Insertion Sort')
+plt.legend()
+plt.grid(True)
 plt.show()
 
-'''
-4. Linear complexity was used with linear search. 
-   The function used was y = mx + b, where the parameters of the function is y = average times, x = vector size, m = slope, b = y-intercept.
-
-   For binary search, a log function was used.
-   The function used was y = log2(x), where the parameters of the function is x = vector size, y = average times
-
-   The results are what we expected. When the vector size is very small, you can see that the linear search had a faster time complexity but because it is an O(n) and binary search is O(log n), you can see that the binary search time is able to level out at a faster time than the linear search as the vector size gets bigger.
-'''
+""" Question 4: 
+As the size of the array increases, it is seen on the graph that binary insertion sort performs better than 
+insertion sort. This is because binary insertion sort uses binary search initially to find the correct position for 
+each of the elements, thus reducing the number of comparisons required for the algorithm to fully sort the data; and 
+this is why this difference is more clearly seen as the datasets get larger."""
